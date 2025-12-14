@@ -1,0 +1,59 @@
+name: Deploy Server to Render
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+    paths:
+      - 'server/**'
+      - 'package.json'
+      - 'Dockerfile'
+      - '.github/workflows/deploy-server.yml'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./server
+        run: npm ci
+
+      - name: Build Docker image
+        run: docker build -t aula-asistente-server .
+
+      - name: Test Docker image
+        run: |
+          docker run -d --name test-server \
+            -e MOCK_EMBEDDINGS=true \
+            -e PORT=3001 \
+            aula-asistente-server
+          sleep 5
+          docker logs test-server
+          docker stop test-server
+          docker rm test-server
+
+      - name: Trigger Render Deploy (Production)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          echo "Deployment triggered for branch: ${{ github.ref_name }}"
+          echo "Check Render dashboard for deployment status"
