@@ -44,7 +44,7 @@ jobs:
         run: npm run build
 
       - name: Deploy to Vercel (Production)
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && secrets.VERCEL_TOKEN != ''
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
@@ -54,10 +54,21 @@ jobs:
           vercel-args: '--prod'
 
       - name: Deploy to Vercel (Preview)
-        if: github.ref != 'refs/heads/main'
+        if: github.ref != 'refs/heads/main' && secrets.VERCEL_TOKEN != ''
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: ./client
+      
+      - name: Skip deployment (no Vercel credentials configured)
+        if: secrets.VERCEL_TOKEN == ''
+        run: |
+          echo "⚠️ Vercel credentials are not configured"
+          echo "ℹ️ To enable automatic deployments:"
+          echo "   1. Create a Vercel project and link it to your repo"
+          echo "   2. Get VERCEL_TOKEN from Vercel Settings → Tokens"
+          echo "   3. Get VERCEL_ORG_ID and VERCEL_PROJECT_ID from project settings"
+          echo "   4. Add all three as GitHub Secrets"
+          echo "   5. Also add VITE_API_URL, VITE_SUPABASE_URL, and VITE_SUPABASE_ANON_KEY"
