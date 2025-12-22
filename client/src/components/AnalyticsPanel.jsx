@@ -158,6 +158,7 @@ export default function AnalyticsPanel({ teacherId }) {
   const [authError, setAuthError] = useState(null);
   const [days] = useState(30);
   const [recommendations, setRecommendations] = useState([]);
+  const [selectedPeriod, setSelectedPeriod] = useState("all");
 
   // Generate actionable recommendations based on data
   useEffect(() => {
@@ -382,21 +383,6 @@ export default function AnalyticsPanel({ teacherId }) {
       }
     };
 
-    const fetchTopStudents = async (headers) => {
-      try {
-        const r = await fetch(`${API_BASE}/api/statistics/top-students?teacherId=${teacherId}&limit=10`, {
-          method: "GET",
-          headers,
-        });
-        if (r.ok) {
-          const json = await r.json();
-          setTopStudents(json.students || []);
-        }
-      } catch (e) {
-        console.warn("top-students fetch error:", e);
-      }
-    };
-
     const fetchGradeDistribution = async (headers) => {
       try {
         const r = await fetch(`${API_BASE}/api/statistics/grade-distribution?teacherId=${teacherId}`, {
@@ -420,12 +406,37 @@ export default function AnalyticsPanel({ teacherId }) {
         fetchSeries(headers),
         fetchMaterials(headers),
         fetchGradesOverview(headers),
-        fetchTopStudents(headers),
         fetchGradeDistribution(headers)
       ]);
       setLoading(false);
     })();
   }, [teacherId, days]);
+
+  // Separate useEffect for fetching students based on selected period
+  useEffect(() => {
+    if (!teacherId) return;
+
+    const fetchTopStudents = async () => {
+      try {
+        const authHeader = await getAuthHeader();
+        const periodParam = selectedPeriod !== "all" ? `&periodId=${selectedPeriod}` : "";
+        const url = `${API_BASE}/api/statistics/top-students?teacherId=${teacherId}&limit=1000${periodParam}`;
+        
+        const r = await fetch(url, {
+          method: "GET",
+          headers: authHeader,
+        });
+        if (r.ok) {
+          const json = await r.json();
+          setTopStudents(json.students || []);
+        }
+      } catch (e) {
+        console.warn("top-students fetch error:", e);
+      }
+    };
+
+    fetchTopStudents();
+  }, [teacherId, selectedPeriod]);
 
   if (!teacherId) {
     return (
@@ -980,108 +991,201 @@ export default function AnalyticsPanel({ teacherId }) {
         )}
       </div>
 
-      {/* Top Students Table */}
-      {topStudents && topStudents.length > 0 && (
-        <div style={{
-          background: "linear-gradient(135deg, #fff 0%, #f8f9fa 100%)",
-          padding: isMobile ? "1rem" : "1.5rem",
-          borderRadius: 16,
-          boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-          marginBottom: "2rem",
-          border: "1px solid #e0e0e0"
-        }}>
-          <h4 style={{ 
-            margin: "0 0 1rem 0", 
-            fontSize: isMobile ? "16px" : "18px",
-            fontWeight: "700",
-            color: "#2c3e50"
+      {/* Best and Worst Students Tables */}
+      {topStudents && topStudents.length > 0 && (() => {
+        const sortedStudents = [...topStudents].sort((a, b) => b.average_score - a.average_score);
+        const bestStudents = sortedStudents.slice(0, 5);
+        const worstStudents = sortedStudents.slice(-5).reverse();
+
+        // Period filter UI
+        const periodFilterSection = gradesOverview && gradesOverview.hasPeriods && gradesOverview.periods && (
+          <div style={{
+            marginBottom: "1.5rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "1rem",
+            flexWrap: "wrap"
           }}>
-            Top 10 Estudiantes (Promedio General)
-          </h4>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 12 : 14 }}>
-              <thead style={{ background: "linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)" }}>
-                <tr>
-                  <th style={{ padding: isMobile ? "0.6rem 0.5rem" : "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd", fontWeight: "700" }}>Pos.</th>
-                  {!isMobile && <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd", fontWeight: "700" }}>Código</th>}
-                  <th style={{ padding: isMobile ? "0.6rem 0.5rem" : "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd", fontWeight: "700" }}>Nombre</th>
-                  <th style={{ padding: isMobile ? "0.6rem 0.5rem" : "0.75rem", textAlign: "center", borderBottom: "2px solid #ddd", fontWeight: "700" }}>Prom.</th>
-                  {!isMobile && <th style={{ padding: "0.75rem", textAlign: "center", borderBottom: "2px solid #ddd", fontWeight: "700" }}>Calif.</th>}
-                  {!isMobile && (
-                    <>
-                      <th style={{ padding: "0.75rem", textAlign: "center", borderBottom: "2px solid #ddd", fontWeight: "700" }}>Mejor</th>
-                      <th style={{ padding: "0.75rem", textAlign: "center", borderBottom: "2px solid #ddd", fontWeight: "700" }}>Menor</th>
-                    </>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {topStudents.map((student, index) => (
-                  <tr 
-                    key={student.student_code} 
-                    style={{ 
-                      borderBottom: "1px solid #f0f0f0",
-                      transition: "background 0.2s ease"
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = "#f8f9fa"}
-                    onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
-                    <td style={{ padding: isMobile ? "0.6rem 0.5rem" : "0.75rem" }}>
-                      <span style={{
-                        display: "inline-block",
-                        width: isMobile ? "24px" : "32px",
-                        height: isMobile ? "24px" : "32px",
-                        lineHeight: isMobile ? "24px" : "32px",
-                        textAlign: "center",
-                        borderRadius: "50%",
-                        background: index < 3 
-                          ? `linear-gradient(135deg, ${index === 0 ? "#ffd700" : index === 1 ? "#c0c0c0" : "#cd7f32"} 0%, ${index === 0 ? "#ffed4e" : index === 1 ? "#e8e8e8" : "#e8a87c"} 100%)`
-                          : "#f5f5f5",
-                        fontWeight: "700",
-                        color: index < 3 ? "#000" : "#666",
-                        fontSize: isMobile ? "11px" : "14px",
-                        boxShadow: index < 3 ? "0 2px 8px rgba(0,0,0,0.15)" : "none"
-                      }}>
-                        {index + 1}
-                      </span>
-                    </td>
-                    {!isMobile && <td style={{ padding: "0.75rem", color: "#666" }}>{student.student_code}</td>}
-                    <td style={{ 
-                      padding: isMobile ? "0.6rem 0.5rem" : "0.75rem", 
-                      fontWeight: "600",
-                      maxWidth: isMobile ? "120px" : "none",
-                      overflow: isMobile ? "hidden" : "visible",
-                      textOverflow: isMobile ? "ellipsis" : "clip",
-                      whiteSpace: isMobile ? "nowrap" : "normal"
-                    }}>
-                      {student.student_name}
-                    </td>
-                    <td style={{ 
-                      padding: isMobile ? "0.6rem 0.5rem" : "0.75rem", 
-                      textAlign: "center", 
-                      fontWeight: "700",
-                      fontSize: isMobile ? "13px" : "15px",
-                      color: student.average_score >= 4.0 ? "#4caf50" : student.average_score >= 3.0 ? "#ff9800" : "#d32f2f"
-                    }}>
-                      {student.average_score.toFixed(1)}
-                    </td>
-                    {!isMobile && <td style={{ padding: "0.75rem", textAlign: "center", color: "#666" }}>{student.total_grades}</td>}
+            <label style={{
+              fontSize: isMobile ? "14px" : "15px",
+              fontWeight: "600",
+              color: "#2c3e50"
+            }}>
+              Filtrar por período:
+            </label>
+            <select
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              style={{
+                padding: "0.5rem 1rem",
+                fontSize: isMobile ? "13px" : "14px",
+                borderRadius: 8,
+                border: "2px solid #e0e0e0",
+                background: "white",
+                cursor: "pointer",
+                fontWeight: "500",
+                color: "#2c3e50",
+                minWidth: isMobile ? "150px" : "200px",
+                transition: "all 0.2s ease"
+              }}
+              onMouseEnter={(e) => e.target.style.borderColor = "#1976d2"}
+              onMouseLeave={(e) => e.target.style.borderColor = "#e0e0e0"}
+            >
+              <option value="all">Todos los períodos</option>
+              {gradesOverview.periods.map(period => (
+                <option key={period.period_id} value={period.period_id}>
+                  {period.period_name}
+                </option>
+              ))}
+            </select>
+            {selectedPeriod !== "all" && (
+              <button
+                onClick={() => setSelectedPeriod("all")}
+                style={{
+                  padding: "0.5rem 1rem",
+                  fontSize: isMobile ? "12px" : "13px",
+                  borderRadius: 8,
+                  border: "none",
+                  background: "#f5f5f5",
+                  color: "#666",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                  transition: "all 0.2s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#e0e0e0";
+                  e.target.style.color = "#333";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "#f5f5f5";
+                  e.target.style.color = "#666";
+                }}
+              >
+                ✕ Limpiar filtro
+              </button>
+            )}
+          </div>
+        );
+
+        const renderStudentTable = (students, title, titleColor, isWorst = false) => (
+          <div style={{
+            background: "linear-gradient(135deg, #fff 0%, #f8f9fa 100%)",
+            padding: isMobile ? "1rem" : "1.5rem",
+            borderRadius: 16,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+            border: "1px solid #e0e0e0"
+          }}>
+            <h4 style={{ 
+              margin: "0 0 1rem 0", 
+              fontSize: isMobile ? "16px" : "18px",
+              fontWeight: "700",
+              color: titleColor
+            }}>
+              {title}
+            </h4>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 12 : 14 }}>
+                <thead style={{ background: "linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)" }}>
+                  <tr>
+                    <th style={{ padding: isMobile ? "0.6rem 0.5rem" : "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd", fontWeight: "700" }}>Pos.</th>
+                    {!isMobile && <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd", fontWeight: "700" }}>Código</th>}
+                    <th style={{ padding: isMobile ? "0.6rem 0.5rem" : "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd", fontWeight: "700" }}>Nombre</th>
+                    <th style={{ padding: isMobile ? "0.6rem 0.5rem" : "0.75rem", textAlign: "center", borderBottom: "2px solid #ddd", fontWeight: "700" }}>Prom.</th>
+                    {!isMobile && <th style={{ padding: "0.75rem", textAlign: "center", borderBottom: "2px solid #ddd", fontWeight: "700" }}>Calif.</th>}
                     {!isMobile && (
                       <>
-                        <td style={{ padding: "0.75rem", textAlign: "center", color: "#4caf50", fontWeight: "600" }}>
-                          {student.highest_score.toFixed(1)}
-                        </td>
-                        <td style={{ padding: "0.75rem", textAlign: "center", color: "#d32f2f", fontWeight: "600" }}>
-                          {student.lowest_score.toFixed(1)}
-                        </td>
+                        <th style={{ padding: "0.75rem", textAlign: "center", borderBottom: "2px solid #ddd", fontWeight: "700" }}>Mejor</th>
+                        <th style={{ padding: "0.75rem", textAlign: "center", borderBottom: "2px solid #ddd", fontWeight: "700" }}>Menor</th>
                       </>
                     )}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {students.map((student, index) => {
+                    const actualPosition = isWorst ? sortedStudents.length - students.length + index + 1 : index + 1;
+                    return (
+                      <tr 
+                        key={student.student_code} 
+                        style={{ 
+                          borderBottom: "1px solid #f0f0f0",
+                          transition: "background 0.2s ease"
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = "#f8f9fa"}
+                        onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
+                        <td style={{ padding: isMobile ? "0.6rem 0.5rem" : "0.75rem" }}>
+                          <span style={{
+                            display: "inline-block",
+                            width: isMobile ? "24px" : "32px",
+                            height: isMobile ? "24px" : "32px",
+                            lineHeight: isMobile ? "24px" : "32px",
+                            textAlign: "center",
+                            borderRadius: "50%",
+                            background: !isWorst && index < 3 
+                              ? `linear-gradient(135deg, ${index === 0 ? "#ffd700" : index === 1 ? "#c0c0c0" : "#cd7f32"} 0%, ${index === 0 ? "#ffed4e" : index === 1 ? "#e8e8e8" : "#e8a87c"} 100%)`
+                              : "#f5f5f5",
+                            fontWeight: "700",
+                            color: !isWorst && index < 3 ? "#000" : "#666",
+                            fontSize: isMobile ? "11px" : "14px",
+                            boxShadow: !isWorst && index < 3 ? "0 2px 8px rgba(0,0,0,0.15)" : "none"
+                          }}>
+                            {actualPosition}
+                          </span>
+                        </td>
+                        {!isMobile && <td style={{ padding: "0.75rem", color: "#666" }}>{student.student_code}</td>}
+                        <td style={{ 
+                          padding: isMobile ? "0.6rem 0.5rem" : "0.75rem", 
+                          fontWeight: "600",
+                          maxWidth: isMobile ? "120px" : "none",
+                          overflow: isMobile ? "hidden" : "visible",
+                          textOverflow: isMobile ? "ellipsis" : "clip",
+                          whiteSpace: isMobile ? "nowrap" : "normal"
+                        }}>
+                          {student.student_name}
+                        </td>
+                        <td style={{ 
+                          padding: isMobile ? "0.6rem 0.5rem" : "0.75rem", 
+                          textAlign: "center", 
+                          fontWeight: "700",
+                          fontSize: isMobile ? "13px" : "15px",
+                          color: student.average_score >= 4.0 ? "#4caf50" : student.average_score >= 3.0 ? "#ff9800" : "#d32f2f"
+                        }}>
+                          {student.average_score.toFixed(1)}
+                        </td>
+                        {!isMobile && <td style={{ padding: "0.75rem", textAlign: "center", color: "#666" }}>{student.total_grades}</td>}
+                        {!isMobile && (
+                          <>
+                            <td style={{ padding: "0.75rem", textAlign: "center", color: "#4caf50", fontWeight: "600" }}>
+                              {student.highest_score.toFixed(1)}
+                            </td>
+                            <td style={{ padding: "0.75rem", textAlign: "center", color: "#d32f2f", fontWeight: "600" }}>
+                              {student.lowest_score.toFixed(1)}
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        );
+
+        return (
+          <>
+            {periodFilterSection}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+              gap: "1.5rem",
+              marginBottom: "2rem"
+            }}>
+              {renderStudentTable(bestStudents, "🏆 Top 5 Mejores Estudiantes", "#2c3e50", false)}
+              {renderStudentTable(worstStudents, "⚠️ 5 Estudiantes con Menor Promedio", "#d32f2f", true)}
+            </div>
+          </>
+        );
+      })()}
 
       {/* Period Details Table */}
       {gradesOverview && gradesOverview.hasPeriods && gradesOverview.periods && (

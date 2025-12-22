@@ -3,8 +3,9 @@ import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useIsMobile } from "../hooks/useMediaQuery";
+import { useAutoHideNav } from "../hooks/useAutoHideNav";
 
-function Navbar() {
+function Navbar({ autoHide = false, scrollBehavior = null }) {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
@@ -12,6 +13,15 @@ function Navbar() {
   const [showMobileNav, setShowMobileNav] = useState(false);
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  
+  // Auto-hide behavior for mobile phases or teacher scroll
+  const { isVisible } = useAutoHideNav({
+    enabled: autoHide && (isMobile || scrollBehavior === 'scroll'),
+    hideDelay: 5000,
+    showOnTap: isMobile,
+    showOnScroll: scrollBehavior === 'scroll',
+    scrollDirection: 'up'
+  });
 
   useEffect(() => {
     async function fetchUserName() {
@@ -83,10 +93,14 @@ function Navbar() {
       justifyContent: "space-between",
       alignItems: "center",
       boxShadow: "0 2px 20px rgba(0,0,0,0.1)",
-      position: "sticky",
+      position: "fixed",
       top: 0,
+      left: 0,
+      right: 0,
       zIndex: 1000,
       borderBottom: "1px solid rgba(0,0,0,0.05)",
+      transform: isVisible ? 'translateY(0)' : 'translateY(-100%)',
+      transition: 'transform 0.3s ease-in-out',
     },
     logo: {
       display: "flex",

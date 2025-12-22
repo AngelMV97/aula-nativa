@@ -97,6 +97,7 @@ export default function Profile() {
         minHeight: 'calc(100vh - 60px)',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         padding: isMobile ? '1.5rem 1rem' : '3rem 2rem',
+        paddingTop: isMobile ? 'calc(60px + 1rem)' : 'calc(60px + 1.5rem)',
         position: 'relative',
         overflow: 'hidden'
       }}>

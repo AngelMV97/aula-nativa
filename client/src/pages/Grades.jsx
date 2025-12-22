@@ -44,6 +44,7 @@ export default function Grades() {
   return (
     <>
       <Navbar />    
+      <div style={{ paddingTop: "calc(60px + 0.5rem)" }}></div>
       <GradesManager teacherId={currentTeacherId} />
     </>
   );

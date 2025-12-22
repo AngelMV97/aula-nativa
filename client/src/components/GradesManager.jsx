@@ -647,7 +647,7 @@ export default function GradesManager({ teacherId }) {
               borderRadius: "12px",
               boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
             }}>
-              {/* Filters Section */}
+              {/* Filters Section
               <div style={{
                 marginBottom: "1.5rem",
                 padding: "1rem",
@@ -767,7 +767,7 @@ export default function GradesManager({ teacherId }) {
                 <div style={{ marginTop: "0.75rem", fontSize: "13px", color: "#666" }}>
                   Mostrando {filteredPeriods.length} de {periods.length} períodos
                 </div>
-              </div>
+              </div> */}
 
               {/* Bulk Actions Bar */}
               <div style={{
@@ -1296,7 +1296,7 @@ export default function GradesManager({ teacherId }) {
             border: "2px solid #dee2e6"
           }}>
             <label style={{ 
-              display: "block", 
+              // display: "block", 
               marginBottom: "1rem", 
               fontWeight: "600", 
               fontSize: "16px",
@@ -1544,9 +1544,9 @@ export default function GradesManager({ teacherId }) {
                 gap: "1rem"
               }}>
                 {[
-                  { value: "excel", label: "Excel", color: "#4caf50" },
+                  { value: "excel", label: "Excel", color: "#2e9932ff" },
                   { value: "pdf", label: "PDF", color: "#1976d2" },
-                  { value: "image", label: "Imagen", color: "#ff9800" }
+                  { value: "image", label: "Imagen", color: "#e97334ff" }
                 ].map(type => (
                   <label
                     key={type.value}
@@ -1892,7 +1892,7 @@ export default function GradesManager({ teacherId }) {
             border: "2px solid #dee2e6"
           }}>
             <label style={{ 
-              display: "block", 
+              // display: "block", 
               marginBottom: "1rem", 
               fontWeight: "600", 
               fontSize: "16px",
@@ -2046,7 +2046,7 @@ export default function GradesManager({ teacherId }) {
             border: "2px solid #dee2e6"
           }}>
             <label style={{ 
-              display: "block", 
+              // display: "block", 
               marginBottom: "1rem", 
               fontWeight: "600",
               fontSize: "16px",

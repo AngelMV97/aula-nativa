@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import { useIsMobile } from "../hooks/useMediaQuery";
 import Modal from "./Modal";
+import { CircularProgress, ThoughtBubble, CharacterDisplay } from "./PracticeComponents";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
@@ -376,8 +377,11 @@ export default function PracticePanel({ session }) {
       display: "flex",
       flexDirection: "column",
       background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+      marginTop: exercises.length > 0 ? "-60px" : "0", // Remove navbar space only after exercises generated
+      paddingTop: exercises.length > 0 ? "60px" : "0" // Compensate with padding to maintain full height
     }}>
-      {/* Header with Character */}
+      {/* Header with Character - Hidden during active practice */}
+      {exercises.length === 0 && (
       <div style={{
         background: "white",
         boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
@@ -387,7 +391,7 @@ export default function PracticePanel({ session }) {
         <div style={{
           maxWidth: "900px",
           margin: "0 auto",
-          padding: isMobile ? "0.75rem 1rem" : "1rem 2rem",
+          padding: isMobile ? "0.75rem 1rem" : "1rem 2rem 1rem",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -547,6 +551,7 @@ export default function PracticePanel({ session }) {
           </div>
         </div>
       </div>
+      )}
 
       {/* Scrollable Content Area */}
       <div style={{
@@ -560,8 +565,8 @@ export default function PracticePanel({ session }) {
           margin: "0 auto"
         }}>
 
-      {/* Selected Subject Display */}
-      {selectedSubject && (
+      {/* Selected Subject Display - Hidden during active practice, minimal circular button instead */}
+      {selectedSubject && exercises.length === 0 && (
         <div
           style={{
             padding: "1rem 1.25rem",
@@ -614,6 +619,47 @@ export default function PracticePanel({ session }) {
             📊 Ver Progreso
           </button>
         </div>
+      )}
+      
+      {/* Minimal Progress Button - Shows during active practice */}
+      {selectedSubject && exercises.length > 0 && (
+        <button
+          onClick={() => setShowProgress(!showProgress)}
+          style={{
+            position: "fixed",
+            top: isMobile ? "7px" : "90px",
+            left: isMobile ? "1rem" : "2rem",
+            width: isMobile ? "45px" : "50px",
+            height: isMobile ? "45px" : "50px",
+            borderRadius: "50%",
+            background: character.color,
+            border: "none",
+            cursor: "pointer",
+            fontSize: "20px",
+            color: "white",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+            zIndex: 100,
+            transition: "all 0.3s ease",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}
+          onMouseEnter={(e) => {
+            if (!isMobile) {
+              e.target.style.transform = "scale(1.1)";
+              e.target.style.boxShadow = "0 6px 16px rgba(0,0,0,0.3)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isMobile) {
+              e.target.style.transform = "scale(1)";
+              e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.2)";
+            }
+          }}
+          title="Ver Progreso"
+        >
+          📊
+        </button>
       )}
 
       {/* Progress Panel */}
@@ -721,41 +767,70 @@ export default function PracticePanel({ session }) {
         </div>
       )}
 
-      {/* Exercise Display */}
+      {/* Exercise Display - Minimalist Design */}
       {exercises.length > 0 && currentExercise && (
         <div
           style={{
-            padding: isMobile ? "1.5rem" : "2rem",
-            background: "white",
-            borderRadius: "12px",
-            border: `2px solid ${character.color}20`,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            padding: isMobile ? "1rem" : "2rem",
+            maxWidth: "900px",
+            margin: "0 auto",
+            width: "100%"
           }}
         >
-          {/* Progress Bar */}
-          <div style={{ marginBottom: "1.5rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "14px", color: "#666" }}>
-              <span>Ejercicio {currentExerciseIndex + 1} de {exercises.length}</span>
-              <span>{Math.round(((currentExerciseIndex + 1) / exercises.length) * 100)}%</span>
+          {/* Circular Progress Indicator - Top Right */}
+          <div style={{
+            position: "fixed",
+            top: isMobile ? "7px" : "165px",
+            right: isMobile ? "7rem" : "2.5rem",
+            zIndex: 100
+          }}>
+            <CircularProgress 
+              current={currentExerciseIndex + 1} 
+              total={exercises.length}
+              size={isMobile ? 45 : 65}
+              color={character.color}
+            />
+          </div>
+
+          {/* Character + Thought Bubble Container - Always side-by-side */}
+          <div style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "flex-start",
+            gap: isMobile ? "1rem" : "2rem",
+            marginBottom: "2rem",
+            flexWrap: isMobile ? "nowrap" : "nowrap"
+          }}>
+            {/* Character Display - Smaller on mobile for side-by-side layout */}
+            <div style={{ flexShrink: 0 }}>
+              <CharacterDisplay 
+                character={character}
+                size={isMobile ? "medium" : "large"}
+              />
             </div>
-            <div style={{ height: "8px", background: "#e0e0e0", borderRadius: "4px", overflow: "hidden" }}>
-              <div
-                style={{
-                  height: "100%",
-                  background: `linear-gradient(90deg, ${character.color}, ${character.color}dd)`,
-                  width: `${((currentExerciseIndex + 1) / exercises.length) * 100}%`,
-                  transition: "width 0.3s",
-                  boxShadow: `0 0 8px ${character.color}50`
-                }}
+
+            {/* Exercise Statement in Thought Bubble */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <ThoughtBubble 
+                content={currentExercise.question_text}
+                characterColor={character.color}
+                autoCollapse={isMobile}
+                collapseDelay={5000}
               />
             </div>
           </div>
 
-          {/* Question */}
-          <h3 style={{ fontSize: isMobile ? "18px" : "22px", marginBottom: "1.5rem", color: "#333" }}>
-            {currentExercise.question_text}
-          </h3>
-
+          {/* Answer Options */}
+          <div style={{
+            background: "white",
+            borderRadius: "16px",
+            padding: isMobile ? "1.25rem" : "1.75rem",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+            border: `2px solid ${character.color}15`
+          }}>
           {/* Multiple Choice Options */}
           {currentExercise.question_type === "multiple_choice" && currentExercise.options && (
             <div style={{ marginBottom: "1.5rem" }}>
@@ -777,8 +852,8 @@ export default function PracticePanel({ session }) {
                     borderColor = "#d32f2f";
                   }
                 } else if (isSelected) {
-                  bgColor = "#e3f2fd";
-                  borderColor = "#1976d2";
+                  bgColor = `${character.color}10`;
+                  borderColor = character.color;
                 }
                 
                 return (
@@ -788,35 +863,51 @@ export default function PracticePanel({ session }) {
                     disabled={submitted}
                     style={{
                       width: "100%",
-                      padding: "1rem",
+                      padding: "1rem 1.25rem",
                       marginBottom: "0.75rem",
                       background: bgColor,
-                      border: `2px solid ${borderColor}`,
-                      borderRadius: "8px",
+                      border: `3px solid ${borderColor}`,
+                      borderRadius: "12px",
                       textAlign: "left",
                       cursor: submitted ? "not-allowed" : "pointer",
                       fontSize: "15px",
                       display: "flex",
                       alignItems: "center",
                       gap: "1rem",
-                      transition: "all 0.2s"
+                      transition: "all 0.2s",
+                      fontWeight: isSelected ? "600" : "400"
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!submitted && !isMobile) {
+                        e.currentTarget.style.transform = "translateX(5px)";
+                        e.currentTarget.style.boxShadow = `0 4px 12px ${character.color}20`;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!submitted && !isMobile) {
+                        e.currentTarget.style.transform = "translateX(0)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }
                     }}
                   >
                     <span style={{
-                      width: "32px",
-                      height: "32px",
+                      width: "36px",
+                      height: "36px",
                       borderRadius: "50%",
-                      background: submitted ? (isCorrect ? "#388e3c" : isWrong ? "#d32f2f" : "#ddd") : (isSelected ? character.color : "#ddd"),
-                      color: "white",
+                      background: submitted ? (isCorrect ? "#388e3c" : isWrong ? "#d32f2f" : "#ddd") : (isSelected ? character.color : "#e0e0e0"),
+                      color: isSelected || submitted ? "white" : "#666",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontWeight: "bold",
-                      flexShrink: 0
+                      flexShrink: 0,
+                      fontSize: "16px"
                     }}>
                       {letter}
                     </span>
-                    <span>{option}</span>
+                    <span style={{ flex: 1 }}>{option}</span>
+                    {submitted && isCorrect && <span style={{ fontSize: "20px" }}>✓</span>}
+                    {submitted && isWrong && <span style={{ fontSize: "20px" }}>✗</span>}
                   </button>
                 );
               })}
@@ -964,11 +1055,13 @@ export default function PracticePanel({ session }) {
               </button>
             )}
           </div>
+          </div>
         </div>
       )}
-
+      
         </div>
       </div>
+
       {/* Completion Modal */}
       <Modal
         isOpen={showModal}

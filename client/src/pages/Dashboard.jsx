@@ -234,9 +234,10 @@ function Dashboard() {
 
   return (
     <>
-      <Navbar />
+      <Navbar scrollBehavior="scroll" autoHide={true} />
       <div style={{ 
-        padding: isMobile ? "1rem" : "2rem", 
+        padding: isMobile ? "1rem" : "2rem",
+        paddingTop: isMobile ? "calc(60px + 1rem)" : "calc(60px + 1.5rem)",
         maxWidth: "1400px", 
         margin: "0 auto",
         minHeight: "calc(100vh - 64px)"

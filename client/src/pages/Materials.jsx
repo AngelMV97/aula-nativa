@@ -256,6 +256,7 @@ export default function Materials() {
       <Navbar />
       <div style={{ 
         padding: isMobile ? "1rem" : "2rem", 
+        paddingTop: isMobile ? "calc(60px + 1rem)" : "calc(60px + 1.5rem)",
         maxWidth: "1200px", 
         margin: "0 auto" 
       }}>

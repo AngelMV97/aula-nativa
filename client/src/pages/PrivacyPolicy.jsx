@@ -223,15 +223,21 @@ www.sic.gov.co`
           }}>
             <div style={{
               display: 'inline-block',
-              padding: '1rem 2rem',
-              background: 'rgba(255,255,255,0.15)',
-              borderRadius: '50px',
+              padding: '0',
+              // background: 'rgba(255,255,255,0.15)',
+              // borderRadius: '50px',
               backdropFilter: 'blur(10px)',
-              marginBottom: '1.5rem'
+              // marginBottom: '1.5rem'
             }}>
-              <span style={{
-                fontSize: isMobile ? '32px' : '48px'
-              }}>🔒</span>
+              <img 
+                src="/image/logos/MainLogo.png" 
+                alt="Aula Nativa" 
+                style={{
+                  width: isMobile ? '150px' : '170px',
+                  height: 'auto',
+                  display: 'block'}}
+                onError={(e) => e.target.style.display = 'none'}
+              />
             </div>
             <h1 style={{
               fontSize: isMobile ? '28px' : '42px',

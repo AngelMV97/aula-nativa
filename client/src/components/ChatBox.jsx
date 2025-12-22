@@ -398,6 +398,8 @@ function ChatBox({ session, onSessionChange }) {
       display: "flex",
       flexDirection: "column",
       background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+      paddingTop: "60px", // Prevent content from being hidden by fixed navbar
+      marginTop: "-60px" // Compensate to maintain full height
     }}>
       {/* Header with Character */}
       <div style={{

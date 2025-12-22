@@ -41,8 +41,8 @@ export default function Assistant() {
 
   return (
     <>
-      <Navbar />
-      <div style={{ display: "flex", height: "calc(100vh - 60px)", position: "relative" }}>
+      <Navbar autoHide={true} />
+      <div style={{ display: "flex", height: "100vh", paddingTop: "60px", position: "relative"}}>
         {/* Sidebar - for assistant and practice phases */}
         {showSidebar && (
           <>
@@ -62,7 +62,7 @@ export default function Assistant() {
                 onClick={() => setIsSidebarCollapsed(false)}
                 style={{
                   position: "fixed",
-                  top: isMobile ? "12px" : "95px", // Just below navbar
+                  top: isMobile ? "9.5px" : "95px", // Just below navbar
                   right: isMobile ? "50px" : "50px", // Top-right
                   width: isMobile ? "40px" : "48px",
                   height: isMobile ? "40px" : "48px",
