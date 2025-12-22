@@ -388,17 +388,25 @@ module.exports = function (supabase) {
   });
 
   // GET /api/statistics/top-students
-  // Get top performing students across all periods
+  // Get top performing students across all periods or filtered by period
   router.get("/statistics/top-students", requireAuth, ensureTeacherOwnership, async (req, res) => {
     try {
       const teacherId = req.query.teacherId;
       const limit = parseInt(req.query.limit || "10", 10);
+      const periodId = req.query.periodId || null; // Period ID is a UUID string, not an integer
 
-      // Get all grades for this teacher
-      const { data: allGrades, error } = await supabase
+      // Build query for grades
+      let query = supabase
         .from("student_grades")
-        .select("student_code, student_name, score")
+        .select("student_code, student_name, score, period_id")
         .eq("teacher_id", teacherId);
+
+      // Apply period filter if provided
+      if (periodId) {
+        query = query.eq("period_id", periodId);
+      }
+
+      const { data: allGrades, error } = await query;
 
       if (error) throw error;
 
