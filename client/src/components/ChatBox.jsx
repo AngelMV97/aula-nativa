@@ -6,12 +6,30 @@ import { useIsMobile } from "../hooks/useMediaQuery";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
+// Helper function to get character image path
+const getCharacterImage = (characterName, ageGroup, state = 'default') => {
+  return `/image/characters/${ageGroup}/${characterName}/${state}.png`;
+};
+
 // Character assignment based on subject (Brand Identity Guide)
-const getCharacterForSubject = (subject) => {
+const getCharacterForSubject = (subject, grade = null) => {
+  // Determine age group folder based on grade
+  // kid: 6-7, teen: 8-9, young_adult: 10-11
+  let ageGroup = "teen"; // default
+  if (grade) {
+    if (grade >= 6 && grade <= 7) {
+      ageGroup = "kid";
+    } else if (grade >= 8 && grade <= 9) {
+      ageGroup = "teen";
+    } else if (grade >= 10 && grade <= 11) {
+      ageGroup = "young_adult";
+    }
+  }
+
   if (!subject)
     return {
       name: "Pico",
-      icon: "/image/characters/teen/Pico-Icon.png",
+      icon: getCharacterImage("Pico", ageGroup),
       color: "#1976D2",
     };
 
@@ -29,7 +47,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Lili",
-      icon: "/image/characters/teen/Lili-Icon.png",
+      icon: getCharacterImage("Lili", ageGroup),
       color: "#9C27B0",
     };
   }
@@ -43,7 +61,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Maco",
-      icon: "/image/characters/teen/Maco-Icon.png",
+      icon: getCharacterImage("Maco", ageGroup),
       color: "#1976D2",
     };
   }
@@ -57,7 +75,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Frailo",
-      icon: "/image/characters/teen/Frailo-Icon.png",
+      icon: getCharacterImage("Frailo", ageGroup),
       color: "#4CAF50",
     };
   }
@@ -73,7 +91,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Cerita",
-      icon: "/image/characters/teen/Cerita-Icon.png",
+      icon: getCharacterImage("Cerita", ageGroup),
       color: "#FF9800",
     };
   }
@@ -86,7 +104,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Rosi",
-      icon: "/image/characters/teen/Rosi-Icon.png",
+      icon: getCharacterImage("Rosi", ageGroup),
       color: "#E91E63",
     };
   }
@@ -100,7 +118,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Yagui",
-      icon: "/image/characters/teen/Yagui-Icon.png",
+      icon: getCharacterImage("Yagui", ageGroup),
       color: "#FF5722",
     };
   }
@@ -116,7 +134,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Kundi",
-      icon: "/image/characters/teen/Kundi-Icon.png",
+      icon: getCharacterImage("Kundi", ageGroup),
       color: "#3F51B5",
     };
   }
@@ -129,7 +147,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Guiro",
-      icon: "/image/characters/teen/Guiro-Icon.png",
+      icon: getCharacterImage("Guiro", ageGroup),
       color: "#795548",
     };
   }
@@ -143,7 +161,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Pico",
-      icon: "/image/characters/teen/Pico-Icon.png",
+      icon: getCharacterImage("Pico", ageGroup),
       color: "#1976D2",
     };
   }
@@ -157,7 +175,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Tuko",
-      icon: "/image/characters/teen/Tuko-Icon.png",
+      icon: getCharacterImage("Tuko", ageGroup),
       color: "#6A4F4B",
     };
   }
@@ -165,7 +183,7 @@ const getCharacterForSubject = (subject) => {
   // Default → Pico
   return {
     name: "Pico",
-    icon: "/image/characters/teen/Pico-Icon.png",
+    icon: getCharacterImage("Pico", ageGroup),
     color: "#1976D2",
   };
 };
@@ -197,10 +215,38 @@ function ChatBox({ session, onSessionChange }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState(session?.id || null);
+  const [userGrade, setUserGrade] = useState(null);
+  const [gradeLoading, setGradeLoading] = useState(true);
   const messagesEndRef = useRef(null);
   const isMobile = useIsMobile();
 
-  const character = getCharacterForSubject(session?.subject);
+  const character = getCharacterForSubject(session?.subject, userGrade);
+
+  // Load user grade
+  useEffect(() => {
+    async function loadGrade() {
+      setGradeLoading(true);
+      try {
+        const { data } = await supabase.auth.getSession();
+        const userId = data?.session?.user?.id;
+        if (userId) {
+          const { data: student } = await supabase
+            .from("students")
+            .select("grade")
+            .eq("user_id", userId)
+            .single();
+          if (student) {
+            setUserGrade(student.grade);
+          }
+        }
+      } catch (e) {
+        console.warn("Error loading grade:", e);
+      } finally {
+        setGradeLoading(false);
+      }
+    }
+    loadGrade();
+  }, []);
 
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -391,6 +437,36 @@ function ChatBox({ session, onSessionChange }) {
       });
     } catch (e) {}
   };
+
+  if (gradeLoading) {
+    return (
+      <div style={{
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
+      }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{
+            width: "50px",
+            height: "50px",
+            border: "4px solid #e0e0e0",
+            borderTopColor: "#1976D2",
+            borderRadius: "50%",
+            animation: "spin 1s linear infinite",
+            margin: "0 auto 1rem"
+          }} />
+          <p style={{ color: "#666", fontSize: "16px" }}>Cargando...</p>
+        </div>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div style={{ 

@@ -181,7 +181,7 @@ export default function Home() {
               filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.3))",
             }}>
               <img 
-                src="/image/characters/teen/Pico-Icon.png" 
+                src="/image/characters/teen/Pico/default.png" 
                 alt="Pico"
                 style={{
                   width: isMobile ? "120px" : "180px",

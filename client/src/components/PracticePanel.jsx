@@ -7,167 +7,146 @@ import { CircularProgress, ThoughtBubble, CharacterDisplay } from "./PracticeCom
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
+// Helper function to get character image path with state
+const getCharacterImage = (characterName, ageGroup, state = 'default') => {
+  return `/image/characters/${ageGroup}/${characterName}/${state}.png`;
+};
+
 // Character assignment based on subject (from Brand Identity Guide)
-const getCharacterForSubject = (subject) => {
-  if (!subject)
-    return {
-      name: "Pico",
-      icon: "/image/characters/teen/Pico-Icon.png",
-      color: "#1976D2",
-    };
+const getCharacterForSubject = (subject, grade = null) => {
 
-  const subjectLower = subject.toLowerCase();
-
-  // 1. Lengua Castellana e Inglés → Lili (orquídea)
-  if (
-    subjectLower.includes("lengua") ||
-    subjectLower.includes("castellana") ||
-    subjectLower.includes("español") ||
-    subjectLower.includes("literatura") ||
-    subjectLower.includes("inglés") ||
-    subjectLower.includes("ingles") ||
-    subjectLower.includes("english")
-  ) {
-    return {
-      name: "Lili",
-      icon: "/image/characters/teen/Lili-Icon.png",
-      color: "#9C27B0",
-    };
+  let ageGroup = "teen"; // default
+  if (grade) {
+    if (grade >= 6 && grade <= 7) {
+      ageGroup = "kid";
+    } else if (grade >= 8 && grade <= 9) {
+      ageGroup = "teen";
+    } else if (grade >= 10 && grade <= 11) {
+      ageGroup = "young_adult";
+    }
   }
 
-  // 2. Matemáticas → Maco (macaco)
-  if (
-    subjectLower.includes("matemática") ||
-    subjectLower.includes("matematica") ||
-    subjectLower.includes("matemáticas") ||
-    subjectLower.includes("matematicas")
-  ) {
-    return {
-      name: "Maco",
-      icon: "/image/characters/teen/Maco-Icon.png",
-      color: "#1976D2",
-    };
+  // Initialize with default Pico
+  let characterName = "Pico";
+  let characterColor = "#1976D2";
+
+  if (subject) {
+    const subjectLower = subject.toLowerCase();
+
+    // 1. Lengua Castellana e Inglés → Lili (orquídea)
+    if (
+      subjectLower.includes("lengua") ||
+      subjectLower.includes("castellana") ||
+      subjectLower.includes("español") ||
+      subjectLower.includes("literatura") ||
+      subjectLower.includes("inglés") ||
+      subjectLower.includes("ingles") ||
+      subjectLower.includes("english")
+    ) {
+      characterName = "Lili";
+      characterColor = "#9C27B0";
+    }
+    // 2. Matemáticas → Maco (macaco)
+    else if (
+      subjectLower.includes("matemática") ||
+      subjectLower.includes("matematica") ||
+      subjectLower.includes("matemáticas") ||
+      subjectLower.includes("matematicas")
+    ) {
+      characterName = "Maco";
+      characterColor = "#1976D2";
+    }
+    // 3. Ciencias Naturales → Frailo (frailejón)
+    else if (
+      subjectLower.includes("ciencias naturales") ||
+      subjectLower.includes("biología") ||
+      subjectLower.includes("biologia") ||
+      subjectLower.includes("naturales")
+    ) {
+      characterName = "Frailo";
+      characterColor = "#4CAF50";
+    }
+    // 4. Ciencias Sociales → Cerita (palma de cera)
+    else if (
+      subjectLower.includes("sociales") ||
+      subjectLower.includes("historia") ||
+      subjectLower.includes("geografía") ||
+      subjectLower.includes("geografia") ||
+      subjectLower.includes("cívica") ||
+      subjectLower.includes("civica")
+    ) {
+      characterName = "Cerita";
+      characterColor = "#FF9800";
+    }
+    // 5. Educación Artística → Rosi (delfín rosado)
+    else if (
+      subjectLower.includes("artística") ||
+      subjectLower.includes("artistica") ||
+      subjectLower.includes("arte")
+    ) {
+      characterName = "Rosi";
+      characterColor = "#E91E63";
+    }
+    // 6. Educación Física → Yagui (jaguar)
+    else if (
+      subjectLower.includes("educación física") ||
+      subjectLower.includes("educacion fisica") ||
+      subjectLower.includes("deporte") ||
+      subjectLower.includes("gimnasia")
+    ) {
+      characterName = "Yagui";
+      characterColor = "#FF5722";
+    }
+    // 7. Tecnología e Informática → Kundi (cóndor)
+    else if (
+      subjectLower.includes("tecnología") ||
+      subjectLower.includes("tecnologia") ||
+      subjectLower.includes("informática") ||
+      subjectLower.includes("informatica") ||
+      subjectLower.includes("computación") ||
+      subjectLower.includes("computacion")
+    ) {
+      characterName = "Kundi";
+      characterColor = "#3F51B5";
+    }
+    // 8. Ética y Valores → Guiro (chigüiro)
+    else if (
+      subjectLower.includes("ética") ||
+      subjectLower.includes("etica") ||
+      subjectLower.includes("valores")
+    ) {
+      characterName = "Guiro";
+      characterColor = "#795548";
+    }
+    // 9. Química and Física → Pico (tucán)
+    else if (
+      subjectLower.includes("química") ||
+      subjectLower.includes("quimica") ||
+      subjectLower.includes("física") ||
+      subjectLower.includes("fisica")
+    ) {
+      characterName = "Pico";
+      characterColor = "#1976D2";
+    }
+    // 10. Religión and Filosofía → Tuko (oso de anteojos)
+    else if (
+      subjectLower.includes("religión") ||
+      subjectLower.includes("religion") ||
+      subjectLower.includes("filosofía") ||
+      subjectLower.includes("filosofia")
+    ) {
+      characterName = "Tuko";
+      characterColor = "#6A4F4B";
+    }
   }
 
-  // 3. Ciencias Naturales → Frailo (frailejón)
-  if (
-    subjectLower.includes("ciencias naturales") ||
-    subjectLower.includes("biología") ||
-    subjectLower.includes("biologia") ||
-    subjectLower.includes("naturales")
-  ) {
-    return {
-      name: "Frailo",
-      icon: "/image/characters/teen/Frailo-Icon.png",
-      color: "#4CAF50",
-    };
-  }
-
-  // 4. Ciencias Sociales → Cerita (palma de cera)
-  if (
-    subjectLower.includes("sociales") ||
-    subjectLower.includes("historia") ||
-    subjectLower.includes("geografía") ||
-    subjectLower.includes("geografia") ||
-    subjectLower.includes("cívica") ||
-    subjectLower.includes("civica")
-  ) {
-    return {
-      name: "Cerita",
-      icon: "/image/characters/teen/Cerita-Icon.png",
-      color: "#FF9800",
-    };
-  }
-
-  // 5. Educación Artística → Rosi (delfín rosado)
-  if (
-    subjectLower.includes("artística") ||
-    subjectLower.includes("artistica") ||
-    subjectLower.includes("arte")
-  ) {
-    return {
-      name: "Rosi",
-      icon: "/image/characters/teen/Rosi-Icon.png",
-      color: "#E91E63",
-    };
-  }
-
-  // 6. Educación Física → Yagui (jaguar)
-  if (
-    subjectLower.includes("educación física") ||
-    subjectLower.includes("educacion fisica") ||
-    subjectLower.includes("deporte") ||
-    subjectLower.includes("gimnasia")
-  ) {
-    return {
-      name: "Yagui",
-      icon: "/image/characters/teen/Yagui-Icon.png",
-      color: "#FF5722",
-    };
-  }
-
-  // 7. Tecnología e Informática → Kundi (cóndor)
-  if (
-    subjectLower.includes("tecnología") ||
-    subjectLower.includes("tecnologia") ||
-    subjectLower.includes("informática") ||
-    subjectLower.includes("informatica") ||
-    subjectLower.includes("computación") ||
-    subjectLower.includes("computacion")
-  ) {
-    return {
-      name: "Kundi",
-      icon: "/image/characters/teen/Kundi-Icon.png",
-      color: "#3F51B5",
-    };
-  }
-
-  // 8. Ética y Valores → Guiro (chigüiro)
-  if (
-    subjectLower.includes("ética") ||
-    subjectLower.includes("etica") ||
-    subjectLower.includes("valores")
-  ) {
-    return {
-      name: "Guiro",
-      icon: "/image/characters/teen/Guiro-Icon.png",
-      color: "#795548",
-    };
-  }
-
-  // 9. Química and Física → Pico (tucán)
-  if (
-    subjectLower.includes("química") ||
-    subjectLower.includes("quimica") ||
-    subjectLower.includes("física") ||
-    subjectLower.includes("fisica")
-  ) {
-    return {
-      name: "Pico",
-      icon: "/image/characters/teen/Pico-Icon.png",
-      color: "#1976D2",
-    };
-  }
-
-  // 10. Religión and Filosofía → Tuko (oso de anteojos)
-  if (
-    subjectLower.includes("religión") ||
-    subjectLower.includes("religion") ||
-    subjectLower.includes("filosofía") ||
-    subjectLower.includes("filosofia")
-  ) {
-    return {
-      name: "Tuko",
-      icon: "/image/characters/teen/Tuko-Icon.png",
-      color: "#6A4F4B",
-    };
-  }
-
-  // Default → Pico
+  // Return character object with getImage function
   return {
-    name: "Pico",
-    icon: "/image/characters/teen/Pico-Icon.png",
-    color: "#1976D2",
+    name: characterName,
+    ageGroup: ageGroup,
+    icon: getCharacterImage(characterName, ageGroup, "default"),
+    color: characterColor,
+    getImage: (state = 'default') => getCharacterImage(characterName, ageGroup, state)
   };
 };
 
@@ -187,9 +166,9 @@ async function getAuthHeader() {
 export default function PracticePanel({ session }) {
   const [selectedSubject, setSelectedSubject] = useState(session?.subject || "");
   const [showSubjectMenu, setShowSubjectMenu] = useState(false);
+  const [userGrade, setUserGrade] = useState(null);
+  const [gradeLoading, setGradeLoading] = useState(true);
   const isMobile = useIsMobile();
-  
-  const character = getCharacterForSubject(selectedSubject);
   
   const [exercises, setExercises] = useState([]);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
@@ -202,6 +181,8 @@ export default function PracticePanel({ session }) {
   const [startTime, setStartTime] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalConfig, setModalConfig] = useState({});
+  const [characterState, setCharacterState] = useState('waving'); // Character animation state
+  const [inactivityTimer, setInactivityTimer] = useState(null);  
 
   const subjects = [
     { name: "Matemáticas", icon: "🔢" },
@@ -218,18 +199,100 @@ export default function PracticePanel({ session }) {
     { name: "Química", icon: "🧪" },
     { name: "Filosofía", icon: "🤔" },
   ];
-
+  
+  const character = getCharacterForSubject(selectedSubject, userGrade);
   const selectedSubjectData = subjects.find(s => s.name === selectedSubject);
 
+  // Timer to show reading state after 30 seconds of inactivity
   useEffect(() => {
-    if (session?.subject && !selectedSubject) {
-      setSelectedSubject(session.subject);
+    if (exercises.length > 0 && !submitted) {
+      const timer = setTimeout(() => {
+        setCharacterState('reading');
+      }, 30000); // 30 seconds
+      
+      setInactivityTimer(timer);
+      
+      return () => clearTimeout(timer);
     }
-  }, [session]);
+  }, [currentExerciseIndex, submitted, exercises.length]);
+
+  // Reset character state on user interaction
+  const resetInactivityTimer = () => {
+    if (inactivityTimer) {
+      clearTimeout(inactivityTimer);
+    }
+    if (characterState === 'reading') {
+      setCharacterState('pointing');
+    }
+  };
+
+  useEffect(() => {
+    if (session?.subject && session.subject !== selectedSubject) {
+      // Subject changed from sidebar - reset everything
+      setSelectedSubject(session.subject);
+      setExercises([]);
+      setCurrentExerciseIndex(0);
+      setUserAnswer("");
+      setSubmitted(false);
+      setFeedback(null);
+      setShowProgress(false);
+      setCharacterState('waving');
+      
+      // Load progress for new subject
+      if (session.subject) {
+        loadProgress();
+      }
+    }
+  }, [session?.subject, selectedSubject]);
 
   useEffect(() => {
     loadProgress();
   }, [selectedSubject]);
+
+  useEffect(() => {
+    async function loadGrade() {
+      setGradeLoading(true);
+      try {
+        const { data } = await supabase.auth.getSession();
+        const userId = data?.session?.user?.id;
+        if (userId) {
+          const { data: student } = await supabase
+            .from("students")
+            .select("grade")
+            .eq("user_id", userId)
+            .single();
+          if (student) {
+            setUserGrade(student.grade);
+          }
+        }
+      } catch (e) {
+        console.warn("Error loading grade:", e);
+      } finally {
+        setGradeLoading(false);
+      }
+    }
+    loadGrade();
+  }, []);
+
+  // Reset state when session changes
+  useEffect(() => {
+    if (session?.id) {
+      // Reset all state when switching sessions
+      setExercises([]);
+      setCurrentExerciseIndex(0);
+      setUserAnswer("");
+      setSubmitted(false);
+      setFeedback(null);
+      setShowProgress(false);
+      setCharacterState('waving');
+      setSelectedSubject(session.subject || "");
+      
+      // Load progress for the new session's subject
+      if (session.subject) {
+        loadProgress();
+      }
+    }
+  }, [session?.id]); // Only trigger when session ID changes
 
   async function loadProgress() {
     if (!selectedSubject) return;
@@ -250,6 +313,7 @@ export default function PracticePanel({ session }) {
   }
 
   async function generateExercises() {
+    setCharacterState('waving'); // Before generating
     if (!selectedSubject || !session?.id) {
       alert("Por favor selecciona una asignatura primero");
       return;
@@ -294,6 +358,7 @@ export default function PracticePanel({ session }) {
   }
 
   async function submitAnswer() {
+    resetInactivityTimer();
     if (!userAnswer.trim()) {
       alert("Por favor ingresa una respuesta");
       return;
@@ -330,6 +395,14 @@ export default function PracticePanel({ session }) {
       
       // Update progress
       await loadProgress();
+      // After getting feedback
+      if (result.isCorrect) {
+        setCharacterState('celebrating');
+        setTimeout(() => setCharacterState('default'), 3000); // Return to default after 3s
+      } else {
+        setCharacterState('thinking');
+        setTimeout(() => setCharacterState('default'), 3000);
+      }
     } catch (e) {
       console.error("Error:", e);
       alert("Error al enviar respuesta. Intenta nuevamente.");
@@ -339,6 +412,7 @@ export default function PracticePanel({ session }) {
   }
 
   function nextExercise() {
+    setCharacterState('pointing'); // Beginning of each exercise
     setSubmitted(false);
     setUserAnswer("");
     setFeedback(null);
@@ -370,6 +444,36 @@ export default function PracticePanel({ session }) {
   }
 
   const currentExercise = exercises[currentExerciseIndex];
+
+  if (gradeLoading) {
+    return (
+      <div style={{
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
+      }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{
+            width: "50px",
+            height: "50px",
+            border: "4px solid #e0e0e0",
+            borderTopColor: "#1976D2",
+            borderRadius: "50%",
+            animation: "spin 1s linear infinite",
+            margin: "0 auto 1rem"
+          }} />
+          <p style={{ color: "#666", fontSize: "16px" }}>Cargando...</p>
+        </div>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div style={{ 
@@ -445,109 +549,6 @@ export default function PracticePanel({ session }) {
                 </p>
               )}
             </div>
-          </div>
-
-          {/* Right side: Subject Selector */}
-          <div style={{ position: "relative" }}>
-            <button
-              onClick={() => setShowSubjectMenu(!showSubjectMenu)}
-              disabled={exercises.length > 0}
-              style={{
-                width: "56px",
-                height: "56px",
-                borderRadius: "50%",
-                border: selectedSubject ? `3px solid ${character.color}` : "2px solid #ddd",
-                background: "white",
-                cursor: exercises.length > 0 ? "not-allowed" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "24px",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                transition: "all 0.2s",
-                opacity: exercises.length > 0 ? 0.5 : 1
-              }}
-              title={selectedSubject || "Seleccionar asignatura"}
-            >
-              {selectedSubjectData ? selectedSubjectData.icon : "📚"}
-            </button>
-
-          {/* Dropdown Menu */}
-          {showSubjectMenu && (
-            <>
-              <div
-                style={{
-                  position: "fixed",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  zIndex: 999,
-                }}
-                onClick={() => setShowSubjectMenu(false)}
-              />
-
-              <div
-                style={{
-                  position: "absolute",
-                  top: "65px",
-                  right: 0,
-                  background: "white",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                  borderRadius: "12px",
-                  minWidth: "240px",
-                  maxHeight: "350px",
-                  overflowY: "auto",
-                  zIndex: 1000,
-                }}
-              >
-                <div
-                  style={{
-                    padding: "0.75rem 1rem",
-                    borderBottom: "1px solid #f0f0f0",
-                    fontWeight: "bold",
-                    fontSize: "14px",
-                    color: "#666",
-                  }}
-                >
-                  Seleccionar asignatura
-                </div>
-                {subjects.map((subject) => (
-                  <button
-                    key={subject.name}
-                    onClick={() => {
-                      setSelectedSubject(subject.name);
-                      setShowSubjectMenu(false);
-                      
-                      // Update session subject if different
-                      if (session?.id && session.subject !== subject.name) {
-                        supabase
-                          .from("chat_sessions")
-                          .update({ subject: subject.name })
-                          .eq("id", session.id)
-                          .then(() => console.log("Subject updated"));
-                      }
-                    }}
-                    style={{
-                      width: "100%",
-                      padding: "12px 16px",
-                      border: "none",
-                      background: selectedSubject === subject.name ? "#e3f2fd" : "transparent",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.75rem",
-                    }}
-                  >
-                    <span style={{ fontSize: "20px" }}>{subject.icon}</span>
-                    <span>{subject.name}</span>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
           </div>
         </div>
       </div>
@@ -808,6 +809,7 @@ export default function PracticePanel({ session }) {
             <div style={{ flexShrink: 0 }}>
               <CharacterDisplay 
                 character={character}
+                state={characterState}
                 size={isMobile ? "medium" : "large"}
               />
             </div>

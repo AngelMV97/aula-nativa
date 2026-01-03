@@ -566,7 +566,7 @@ function Login() {
           {/* Character decoration (only for students in signup) */}
           {mode === 'signup' && role === 'student' && (
             <img 
-              src="/image/characters/teen/Pico-Icon.png" 
+              src="/image/characters/teen/Pico/default.png" 
               alt="Pico"
               style={styles.character}
               onError={(e) => e.target.style.display = 'none'}

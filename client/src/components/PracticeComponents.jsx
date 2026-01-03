@@ -203,19 +203,25 @@ export function ThoughtBubble({
  * Character Display Component
  * Shows the character prominently in practice mode
  */
-export function CharacterDisplay({ character, size = "large" }) {
+export function CharacterDisplay({ character, size = "large", state = "default"  }) {
   const isMobile = useIsMobile();
   
   const sizeMap = {
-    small: isMobile ? "80px" : "100px",
-    medium: isMobile ? "120px" : "150px",
-    large: isMobile ? "150px" : "200px"
+    small: isMobile ? "60px" : "80px",
+    medium: isMobile ? "90px" : "120px",
+    large: isMobile ? "110px" : "140px"
   };
 
   const actualSize = sizeMap[size] || sizeMap.medium;
 
+  // Use character.getImage() if available, otherwise fall back to icon
+  const imagePath = character.getImage ? character.getImage(state) : character.icon;
+
   return (
     <div style={{
+      position: "relative",
+      width: actualSize,
+      height: actualSize,
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -223,40 +229,34 @@ export function CharacterDisplay({ character, size = "large" }) {
     }}>
       {/* Character Image with glow effect */}
       <div style={{
-        width: actualSize,
-        height: actualSize,
-        borderRadius: "50%",
-        background: `linear-gradient(135deg, ${character.color}15 0%, ${character.color}05 100%)`,
+        width: actualSize.width,
+        height: actualSize.height,
+        // borderRadius: "50%",
+        // background: `linear-gradient(135deg, ${character.color}15 0%, ${character.color}05 100%)`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        boxShadow: `0 8px 32px ${character.color}40`,
+        // boxShadow: `0 8px 32px ${character.color}40`,
         position: "relative",
         animation: "float 3s ease-in-out infinite"
       }}>
         <img 
-          src={character.icon}
-          alt={character.name}
+          src={imagePath}
+          alt={`${character.name} - ${state}`}
           style={{
-            width: "120%",
-            height: "120%",
-            objectFit: "contain"
+            width: "110%",
+            height: "110%",
+            objectFit: "contain",
+            transition: "all 0.3s ease"
           }}
-          onError={(e) => e.target.style.display = 'none'}
+          // onError={(e) => e.target.style.display = 'none'}
+          onError={(e) => {
+            // Fallback to default state if specific state image doesn't exist
+            if (state !== 'default' && character.getImage) {
+              e.target.src = character.getImage('default');
+            }
+          }}
         />
-      </div>
-
-      {/* Character name badge */}
-      <div style={{
-        background: character.color,
-        color: "white",
-        padding: "0.5rem 1.25rem",
-        borderRadius: "20px",
-        fontSize: "14px",
-        fontWeight: "600",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
-      }}>
-        {character.name}
       </div>
 
       <style>{`

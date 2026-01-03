@@ -1,6 +1,7 @@
 // client/src/components/StudentSidebar.jsx
 import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
+import Modal from "./Modal";
 
 export default function StudentSidebar({ 
   activePhase, 
@@ -16,6 +17,8 @@ export default function StudentSidebar({
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [loading, setLoading] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, session: null });
+  const [showSubjectMenu, setShowSubjectMenu] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -123,28 +126,35 @@ export default function StudentSidebar({
     }
   }
 
-  async function handleDelete(sessionId) {
-    if (!window.confirm("¿Eliminar esta conversación?")) return;
+  function handleDeleteClick(session) {
+    setDeleteModal({ isOpen: true, session });
+    setContextMenu(null);
+  }
+
+  async function confirmDelete() {
+    const { session } = deleteModal;
+    if (!session) return;
 
     try {
       const { error } = await supabase
         .from("chat_sessions")
         .delete()
-        .eq("id", sessionId);
+        .eq("id", session.id);
 
       if (error) throw error;
 
-      setSessions(prev => prev.filter(s => s.id !== sessionId));
+      setSessions(prev => prev.filter(s => s.id !== session.id));
       
       // If deleted session was active, clear selection
-      if (currentSessionId === sessionId) {
+      if (currentSessionId === session.id) {
         onSelectSession(null);
       }
+
+      setDeleteModal({ isOpen: false, session: null });
     } catch (e) {
       console.error("Error deleting session:", e);
-      alert("Error al eliminar");
+      alert("❌ Error al eliminar la sesión. Por favor intenta nuevamente.");
     }
-    setContextMenu(null);
   }
 
   async function handleSetSubject(sessionId, subject) {
@@ -156,21 +166,25 @@ export default function StudentSidebar({
 
       if (error) throw error;
 
-      setSessions(prev => prev.map(s => 
-        s.id === sessionId ? { ...s, subject } : s
-      ));
-      
-      // Update current session if it's the active one
-      if (currentSessionId === sessionId) {
-        const updatedSession = sessions.find(s => s.id === sessionId);
-        if (updatedSession) {
+      // Update local sessions state
+      const updatedSession = sessions.find(s => s.id === sessionId);
+      if (updatedSession) {
+        updatedSession.subject = subject;
+        setSessions(prev => prev.map(s => 
+          s.id === sessionId ? { ...s, subject } : s
+        ));
+        
+        // If this is the current session, update it in parent component
+        if (currentSessionId === sessionId) {
           onSelectSession({ ...updatedSession, subject });
         }
       }
+      
+      setContextMenu(null);
     } catch (e) {
       console.error("Error setting subject:", e);
+      alert("Error al asignar materia");
     }
-    setContextMenu(null);
   }
 
   const phaseLabels = {
@@ -195,9 +209,45 @@ export default function StudentSidebar({
     "Filosofía"
   ];
 
+  // Build modal message
+  const getDeleteModalMessage = () => {
+    const session = deleteModal.session;
+    if (!session) return null;
 
-  
+    const phaseText = {
+      'assistant': 'Conversación',
+      'practice': 'Práctica',
+      'mocktest': 'Simulacro'
+    }[session.phase] || 'Sesión';
 
+    return (
+      <div>
+        <div style={{ marginBottom: '1rem' }}>
+          <strong>📋 Título:</strong> {session.title}
+        </div>
+        <div style={{ marginBottom: '1rem' }}>
+          <strong>📚 Tipo:</strong> {phaseText}
+        </div>
+        {session.subject && (
+          <div style={{ marginBottom: '1rem' }}>
+            <strong>📖 Asignatura:</strong> {session.subject}
+          </div>
+        )}
+        <div style={{ 
+          marginTop: '1.5rem', 
+          padding: '1rem', 
+          background: '#fff3cd', 
+          borderRadius: '8px',
+          borderLeft: '4px solid #ffc107'
+        }}>
+          <strong>⚠️ Esta acción no se puede deshacer.</strong>
+          <div style={{ marginTop: '0.5rem', fontSize: '14px' }}>
+            Se perderán todos los mensajes, respuestas y progreso de esta sesión.
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   if (isCollapsed) {
     return null;
@@ -333,7 +383,7 @@ export default function StudentSidebar({
                 <>
                   <button
                     onClick={(e) => {
-                      e.stopPropagation(); // Prevent selecting the session
+                      e.stopPropagation();
                       handleContextMenu(e, session);
                     }}
                     style={{
@@ -388,7 +438,10 @@ export default function StudentSidebar({
       {contextMenu && (
         <>
           <div
-            onClick={() => setContextMenu(null)}
+            onClick={() => {
+              setContextMenu(null);
+              setShowSubjectMenu(false);
+            }}
             style={{
               position: "fixed",
               top: 0,
@@ -430,6 +483,10 @@ export default function StudentSidebar({
             {/* Subject submenu */}
             <div style={{ position: "relative" }}>
               <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowSubjectMenu(!showSubjectMenu);
+                }}
                 style={{
                   width: "100%",
                   padding: "10px 16px",
@@ -443,22 +500,29 @@ export default function StudentSidebar({
               >
                 📚 Asignar materia →
               </button>
+              {showSubjectMenu && (
               <div style={{
-                position: "absolute",
-                left: "100%",
-                top: 0,
+                position: window.innerWidth < 768 ? "fixed" : "absolute",
+                left: window.innerWidth < 768 ? "50%" : "100%",
+                top: window.innerWidth < 768 ? "50%" : 0,
+                transform: window.innerWidth < 768 ? "translate(-50%, -50%)" : "none",
                 background: "white",
                 border: "1px solid #ccc",
                 borderRadius: "8px",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                maxHeight: "300px",
+                maxHeight: window.innerWidth < 768 ? "70vh" : "300px",
                 overflowY: "auto",
-                minWidth: "180px"
+                minWidth: window.innerWidth < 768 ? "250px" : "180px",
+                maxWidth: window.innerWidth < 768 ? "90vw" : "none",
+                zIndex: 1001
               }}>
                 {SUBJECTS.map(subj => (
                   <button
                     key={subj}
-                    onClick={() => handleSetSubject(contextMenu.session.id, subj)}
+                    onClick={() => {
+                      handleSetSubject(contextMenu.session.id, subj);
+                      setShowSubjectMenu(false);
+                    }}
                     style={{
                       width: "100%",
                       padding: "8px 12px",
@@ -474,10 +538,11 @@ export default function StudentSidebar({
                   </button>
                 ))}
               </div>
+              )}
             </div>
 
             <button
-              onClick={() => handleDelete(contextMenu.session.id)}
+              onClick={() => handleDeleteClick(contextMenu.session)}
               style={{
                 width: "100%",
                 padding: "10px 16px",
@@ -494,6 +559,18 @@ export default function StudentSidebar({
           </div>
         </>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, session: null })}
+        onConfirm={confirmDelete}
+        title="¿Eliminar esta sesión?"
+        message={getDeleteModalMessage()}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        type="confirm"
+      />
     </>
   );
 }

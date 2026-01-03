@@ -7,12 +7,30 @@ import Toast from "./Toast";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
+// Helper function to get character image path
+const getCharacterImage = (characterName, ageGroup, state = 'default') => {
+  return `/image/characters/${ageGroup}/${characterName}/${state}.png`;
+};
+
 // Character assignment based on subject (from Brand Identity Guide)
-const getCharacterForSubject = (subject) => {
+const getCharacterForSubject = (subject, grade = null) => {
+  // Determine age group folder based on grade
+  // kid: 6-7, teen: 8-9, young_adult: 10-11
+  let ageGroup = "teen"; // default
+  if (grade) {
+    if (grade >= 6 && grade <= 7) {
+      ageGroup = "kid";
+    } else if (grade >= 8 && grade <= 9) {
+      ageGroup = "teen";
+    } else if (grade >= 10 && grade <= 11) {
+      ageGroup = "young_adult";
+    }
+  }
+
   if (!subject)
     return {
       name: "Pico",
-      icon: "/image/characters/teen/Pico-Icon.png",
+      icon: getCharacterImage("Pico", ageGroup),
       color: "#1976D2",
     };
 
@@ -32,7 +50,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Lili",
-      icon: "/image/characters/teen/Lili-Icon.png",
+      icon: getCharacterImage("Lili", ageGroup),
       color: "#9C27B0",
     };
   }
@@ -46,7 +64,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Maco",
-      icon: "/image/characters/teen/Maco-Icon.png",
+      icon: getCharacterImage("Maco", ageGroup),
       color: "#1976D2",
     };
   }
@@ -60,7 +78,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Frailo",
-      icon: "/image/characters/teen/Frailo-Icon.png",
+      icon: getCharacterImage("Frailo", ageGroup),
       color: "#4CAF50",
     };
   }
@@ -77,7 +95,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Cerita",
-      icon: "/image/characters/teen/Cerita-Icon.png",
+      icon: getCharacterImage("Cerita", ageGroup),
       color: "#FF9800",
     };
   }
@@ -90,7 +108,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Rosi",
-      icon: "/image/characters/teen/Rosi-Icon.png",
+      icon: getCharacterImage("Rosi", ageGroup),
       color: "#E91E63",
     };
   }
@@ -104,7 +122,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Yagui",
-      icon: "/image/characters/teen/Yagui-Icon.png",
+      icon: getCharacterImage("Yagui", ageGroup),
       color: "#FF5722",
     };
   }
@@ -120,7 +138,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Kundi",
-      icon: "/image/characters/teen/Kundi-Icon.png",
+      icon: getCharacterImage("Kundi", ageGroup),
       color: "#3F51B5",
     };
   }
@@ -133,7 +151,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Guiro",
-      icon: "/image/characters/teen/Guiro-Icon.png",
+      icon: getCharacterImage("Guiro", ageGroup),
       color: "#795548",
     };
   }
@@ -147,7 +165,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Pico",
-      icon: "/image/characters/teen/Pico-Icon.png",
+      icon: getCharacterImage("Pico", ageGroup),
       color: "#1976D2",
     };
   }
@@ -161,7 +179,7 @@ const getCharacterForSubject = (subject) => {
   ) {
     return {
       name: "Tuko",
-      icon: "/image/characters/teen/Tuko-Icon.png",
+      icon: getCharacterImage("Tuko", ageGroup),
       color: "#6A4F4B",
     };
   }
@@ -169,7 +187,7 @@ const getCharacterForSubject = (subject) => {
   // Default → Pico
   return {
     name: "Pico",
-    icon: "/image/characters/teen/Pico-Icon.png",
+    icon: getCharacterImage("Pico", ageGroup),
     color: "#1976D2",
   };
 };
@@ -206,7 +224,7 @@ export default function MockTestPanel({ session }) {
   const [modalConfig, setModalConfig] = useState({});
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
-  const character = getCharacterForSubject(selectedArea?.name);
+  const character = getCharacterForSubject(selectedArea?.name, userGrade);
 
   const showToast = (message, type = "success") => {
     setToast({ show: true, message, type });
